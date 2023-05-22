@@ -1,0 +1,38 @@
+// export default parentReducer = (state, action) => {
+//   const { type, payload } = action;
+
+//   // switch (type) {
+//   //   case "GET_SESSIONS":
+//   //     console.log("GET_SESSIONS", payload);
+
+//   //     return {
+//   //       ...state,
+//   //       is_parent: payload.user_sessions,
+//   //     };
+//   switch (type) {
+//     case "CREATE_SESSION":
+//       console.log("CREATE_SESSION", payload);
+
+//       return {
+//         ...state,
+//         is_parent: payload.user_sessions, // session BUT HOW?
+//       };
+
+//     //   case "CLOSE_SESSION":
+//     //     console.log("CLOSE_SESSION", payload);
+
+//     //     return {
+//     //       ...state,
+//     //       is_parent: payload.is_parent,
+//     //     };
+//     // case "IS_ADMIN":
+//     //   console.log("IS_ADMIN", payload);
+
+//     //   return {
+//     //     ...state,
+//     //     total: payload.total
+//     //   };
+//     default:
+//       throw new Error(`No case for type ${type} found in userReducer.`);
+//   }
+// };
