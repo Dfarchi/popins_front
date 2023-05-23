@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import { Box } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Link from "@mui/material/Link";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
 
 function calculateAge(yearOfBirth) {
@@ -16,8 +16,12 @@ function calculateAge(yearOfBirth) {
 const ProfilePage = () => {
   const { currentUser, setCurrentUser } = useContext(UserContext);
   console.log("in Profile_page", currentUser.id);
+  const navigate = useNavigate();
 
-  if (!currentUser.id) return <Navigate to="/" />;
+  const navigateTo = (path) => {
+    navigate(path);
+  };
+  if (!currentUser.id) return navigateTo("/");
 
   if (currentUser.id) {
     return (

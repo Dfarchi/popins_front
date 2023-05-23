@@ -6,7 +6,7 @@ const SessionCard = ({ session }) => {
     session;
 
   return (
-    <Card>
+    <Card maxWidth="sm" style={{ display: "flex", margin: "10px " }}>
       <CardContent>
         <Typography variant="h5" component="div">
           Session ID: {id}

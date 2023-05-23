@@ -12,7 +12,7 @@ const initialUser = {
   profile_oic: null,
   social: null,
   user: null,
-  user_sessions: null,
+  sessions: null,
 };
 export const UserContext = createContext(initialUser);
 console.log("UserContext", UserContext);

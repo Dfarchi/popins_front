@@ -1,21 +1,25 @@
-import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
-import React from "react";
-// import Login from "./Login";
-import Signup from "../registration/signup_form";
+// import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import React, { useState, useContext, useEffect } from "react";
 import { Box, Button, TextField, Modal } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useState, useContext } from "react";
 import axios from "axios";
-import { useEffect } from "react";
 import { UserContext } from "../context/userContext";
 
 export const Signin = ({ toggleSignin }) => {
   const { currentUser, setCurrentUser } = useContext(UserContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  // const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  console.log("currentUser in login", currentUser);
+
+  const navigateTo = (path) => {
+    navigate(path);
+  };
+  // useEffect(() => {
+  //   console.log("in signin useEffect", currentUser);
+  //   if (currentUser.id) {
+  //     Navigate(`/`);
+  //   }
+  // }, [currentUser.id]);
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
@@ -25,20 +29,8 @@ export const Signin = ({ toggleSignin }) => {
     setPassword(event.target.value);
   };
 
-  useEffect(() => {
-    console.log("in signin useEffect", currentUser);
-    if (currentUser.id) {
-      navigate(`/`);
-      //profile/${currentUser.id}
-    }
-  }, [currentUser.id]);
-
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // console.log(event);
-    // catch((error) => {
-    //   console.log(error);
-    // });
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/token/", {
         username: username,
@@ -62,17 +54,31 @@ export const Signin = ({ toggleSignin }) => {
             },
           }
         );
+
         if (userResponse.status === 200) {
           setCurrentUser(userResponse.data);
+
+          const sessionResponse = await axios.get(
+            "http://127.0.0.1:8000/api/session/",
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: {
+                username: currentUser.username,
+              },
+            }
+          );
+          if (sessionResponse.status === 200) {
+            const sessions = sessionResponse.data;
+            setCurrentUser({ ...currentUser, sessions: sessions });
+          }
         }
       }
     } catch (error) {
       console.log(error);
     }
-  };
-
-  const navigateTo = (path) => {
-    navigate(path);
+    toggleSignin();
   };
 
   return (
@@ -104,7 +110,7 @@ export const Signin = ({ toggleSignin }) => {
       <Button
         variant="contained"
         onClick={() => {
-          // navigateTo("/signup");
+          navigateTo("/signup");
           toggleSignin();
         }}
       >

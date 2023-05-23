@@ -26,9 +26,9 @@ import Signup from "../registration/signup_form";
 import { Modal } from "@mui/material";
 import { useState } from "react";
 import { styled, useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../context/userContext";
+import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -102,9 +102,9 @@ export default function MiniDrawer() {
   const [isSigninOpen, setisSigninOpen] = useState(false);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const navigate = useNavigate();
-
   const { currentUser, setCurrentUser } = useContext(UserContext);
+
+  const navigate = useNavigate();
 
   const navigateTo = (path) => {
     navigate(path);
@@ -200,7 +200,7 @@ export default function MiniDrawer() {
               </ListItemButton>
 
               <ListItemButton
-                onClick={() => navigateTo(`/profile/`)}
+                onClick={() => navigateTo("/profile/")}
                 id="Account"
               >
                 <ListItemIcon>
@@ -209,11 +209,11 @@ export default function MiniDrawer() {
                 <ListItemText primary="Account" />
               </ListItemButton>
 
-              <ListItemButton onClick={() => navigateTo("/")} id="Nanny">
+              <ListItemButton onClick={() => navigateTo("/")} id="Home">
                 <ListItemIcon>
                   <CribIcon />
                 </ListItemIcon>
-                <ListItemText primary="Nanny" />
+                <ListItemText primary="Home" />
               </ListItemButton>
             </List>
           </Box>

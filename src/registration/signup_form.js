@@ -27,6 +27,10 @@ export default function Signup({ handleSignupClose }) {
   const { currentUser, setCurrentUser } = useContext(UserContext);
   const navigate = useNavigate();
 
+  const navigateTo = (path) => {
+    navigate(path);
+  };
+
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
   };
@@ -45,7 +49,7 @@ export default function Signup({ handleSignupClose }) {
 
   useEffect(() => {
     if (SuccessedSubmit === true) {
-      navigate(`/profile/${currentUser.id}`);
+      navigateTo(`/profile/${currentUser.id}`);
     }
   }, [currentUser.id]);
 

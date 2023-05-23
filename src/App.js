@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 // import { initialUser } from "./context/userContext";
-import { UserProvider } from "./context/userContext";
+import { UserProvider, UserContext } from "./context/userContext";
 // import { useContext } from "react";
-// import { useNavigate } from "react-router-dom";
 import axios from "axios";
 // here is a change
 import HomePage from "./pages/hompage";
@@ -14,10 +13,8 @@ import { useState } from "react";
 import SignupForm from "./registration/signup_form";
 
 const App = () => {
-  const [currentUser, setCurrentUser] = useState();
+  const [currentUser, setCurrentUser] = useState(UserContext);
   console.log(currentUser);
-
-  // const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser.id) {
