@@ -12,7 +12,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useContext } from "react";
-import { UserContext } from "../context/userContext";
+import { useUser, useUserDispatch } from "../context/userContextFull";
 
 export default function Signup({ handleSignupClose }) {
   console.log("hey im here");
@@ -24,7 +24,8 @@ export default function Signup({ handleSignupClose }) {
   const [SuccessedSubmit, setSuccessedSubmit] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { currentUser, setCurrentUser } = useContext(UserContext);
+  const currentUser = useUser();
+  const currentUserDispatch = useUserDispatch();
   const navigate = useNavigate();
 
   const navigateTo = (path) => {
@@ -48,7 +49,7 @@ export default function Signup({ handleSignupClose }) {
   };
 
   useEffect(() => {
-    if (SuccessedSubmit === true) {
+    if (SuccessedSubmit === true && currentUser.id) {
       navigateTo(`/profile/${currentUser.id}`);
     }
   }, [currentUser.id]);

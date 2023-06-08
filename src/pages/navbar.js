@@ -26,9 +26,8 @@ import Signup from "../registration/signup_form";
 import { Modal } from "@mui/material";
 import { useState } from "react";
 import { styled, useTheme } from "@mui/material/styles";
-import { useContext } from "react";
-import { UserContext } from "../context/userContext";
 import { useNavigate } from "react-router-dom";
+import { useUser, useUserDispatch } from "../context/userContextFull";
 
 const drawerWidth = 240;
 
@@ -102,7 +101,6 @@ export default function MiniDrawer() {
   const [isSigninOpen, setisSigninOpen] = useState(false);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const { currentUser, setCurrentUser } = useContext(UserContext);
 
   const navigate = useNavigate();
 
@@ -138,35 +136,38 @@ export default function MiniDrawer() {
         }}
       >
         <Box sx={{ p: 2 }}>
-          {isSigninOpen ? (
-            <Signin
-              toggleSignin={toggleSignin}
-              setCurrentUser={setCurrentUser}
-            />
-          ) : (
-            <Signup />
-          )}
+          {isSigninOpen ? <Signin toggleSignin={toggleSignin} /> : <Signup />}
         </Box>
       </Modal>
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
         <AppBar position="fixed" open={open}>
-          <Toolbar>
+          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={handleDrawerOpen}
+                edge="start"
+                sx={{
+                  marginRight: 5,
+                  ...(open && { display: "none" }),
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" noWrap component="div">
+                Popins, pop in for a session
+              </Typography>
+            </Box>
             <IconButton
               color="inherit"
-              aria-label="open drawer"
-              onClick={handleDrawerOpen}
-              edge="start"
-              sx={{
-                marginRight: 5,
-                ...(open && { display: "none" }),
-              }}
+              aria-label="open sign in modal"
+              onClick={toggleSignin}
+              edge="end"
             >
-              <MenuIcon />
+              <AccountBoxIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              Popins, pop in for a session
-            </Typography>
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
@@ -182,16 +183,16 @@ export default function MiniDrawer() {
           <Divider />
           <Box sx={{ width: 250 }} role="presentation">
             <List>
-              <ListItemButton id="SignIn" onClick={toggleSignin}>
+              <ListItemButton onClick={() => navigateTo("/")} id="Home">
                 <ListItemIcon>
-                  <HailIcon />
+                  <CribIcon />
                 </ListItemIcon>
-                <ListItemText primary="Sign in" />
+                <ListItemText primary="Home" />
               </ListItemButton>
 
               <ListItemButton
                 onClick={() => navigateTo("/session")}
-                id="Session"
+                id="Sessions"
               >
                 <ListItemIcon>
                   <SupervisedUserCircleIcon />
@@ -209,12 +210,12 @@ export default function MiniDrawer() {
                 <ListItemText primary="Account" />
               </ListItemButton>
 
-              <ListItemButton onClick={() => navigateTo("/")} id="Home">
+              {/* <ListItemButton id="SignIn" onClick={toggleSignin}>
                 <ListItemIcon>
-                  <CribIcon />
-                </ListItemIcon>
-                <ListItemText primary="Home" />
-              </ListItemButton>
+                  <HailIcon />
+                </ListItemIcon> */}
+              {/* <ListItemText primary="Sign in" />
+              </ListItemButton> */}
             </List>
           </Box>
         </Drawer>

@@ -1,5 +1,4 @@
 import * as React from "react";
-import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import Badge from "@mui/material/Badge";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -7,117 +6,158 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { DayCalendarSkeleton } from "@mui/x-date-pickers/DayCalendarSkeleton";
-import { UserContext } from "../context/userContext";
+import { useUser } from "../context/userContextFull";
+import CreateSession from "./CreateSession";
+import { Create } from "@mui/icons-material";
+import Modal from "@mui/material/Modal";
+import SessionCard from "./SessionCard";
 
-function getRandomNumber(min, max) {
-  return Math.round(Math.random() * (max - min) + min);
-}
+const initialValue = dayjs();
 
-/**
- * Mimic fetch with abort controller https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
- * ⚠️ No IE11 support
- */
-function fakeFetch(date, { signal }) {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      const daysInMonth = date.daysInMonth();
-      const daysToHighlight = [1, 2, 3].map(() =>
-        getRandomNumber(1, daysInMonth)
-      );
+const ServerDay = (props) => {
+  const {
+    highlightedDays = [],
+    day,
+    outsideCurrentMonth,
+    sessions,
+    currentMonth,
+    toggleModal,
+    setSelectedDay,
+    ...other
+  } = props;
 
-      resolve({ daysToHighlight });
-    }, 500);
+  const currentUser = useUser();
+  const userSessions = currentUser.sessions || [];
 
-    signal.onabort = () => {
-      clearTimeout(timeout);
-      reject(new DOMException("aborted", "AbortError"));
-    };
-  });
-}
-
-const initialValue = dayjs("2022-04-17");
-
-function ServerDay(props) {
-  const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
+  const newDayFormat =
+    String(day["$D"]).length === 1 ? `0${day["$D"]}` : day["$D"];
 
   const isSelected =
-    !props.outsideCurrentMonth && highlightedDays.indexOf(props.day.date()) > 0;
+    !props.outsideCurrentMonth &&
+    highlightedDays.includes(String(newDayFormat));
+
+  const filteredSessions = userSessions.filter((session) => {
+    const { date } = session;
+    const parts = date.split("-");
+    const sessionMonth = parseInt(parts[1]);
+    const sessionDay = parseInt(parts[2]);
+
+    return (
+      sessionMonth === currentMonth && sessionDay === parseInt(newDayFormat)
+    );
+  });
+
+  const hasHappened = filteredSessions.some((session) => session.has_happened);
+
+  let badgeContent = "";
+
+  if (isSelected) {
+    if (hasHappened) {
+      badgeContent = "✅";
+    } else {
+      badgeContent = "🌚";
+    }
+  }
+
+  const handleDayClick = () => {
+    toggleModal();
+    const month = (day["$M"] + 1).toString().padStart(2, "0");
+    const dayOfMonth = day["$D"].toString().padStart(2, "0");
+    const today = `${day["$y"]}-${month}-${dayOfMonth}`;
+    console.log(today);
+    setSelectedDay(today);
+  };
 
   return (
     <Badge
       key={props.day.toString()}
       overlap="circular"
-      badgeContent={isSelected ? "🌚" : undefined}
+      badgeContent={badgeContent}
     >
       <PickersDay
+        onClick={handleDayClick}
         {...other}
         outsideCurrentMonth={outsideCurrentMonth}
         day={day}
       />
     </Badge>
   );
-}
-
-ServerDay.propTypes = {
-  /**
-   * The date to show.
-   */
-  day: PropTypes.object.isRequired,
-  highlightedDays: PropTypes.arrayOf(PropTypes.number),
-  /**
-   * If `true`, day is outside of month and will be hidden.
-   */
-  outsideCurrentMonth: PropTypes.bool.isRequired,
 };
 
-export default function CalendarWithButtons() {
-  const requestAbortController = React.useRef(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [highlightedDays, setHighlightedDays] = React.useState([1, 2, 15]);
-
-  const fetchHighlightedDays = (date) => {
-    const controller = new AbortController();
-    fakeFetch(date, {
-      signal: controller.signal,
-    })
-      .then(({ daysToHighlight }) => {
-        setHighlightedDays(daysToHighlight);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ignore the error if it's caused by `controller.abort`
-        if (error.name !== "AbortError") {
-          throw error;
-        }
-      });
-
-    requestAbortController.current = controller;
-  };
+export default function MyCalendar() {
+  const [open, setOpen] = React.useState(false);
+  const toggleModal = () => setOpen((prevOpen) => !prevOpen);
+  const handleClose = () => setOpen(false);
+  const currentUser = useUser();
+  const [selectedDay, setSelectedDay] = React.useState(null);
+  const [currentMonth, setCurrentMonth] = React.useState(
+    initialValue.month() + 1
+  );
+  const [highlightedDays, setHighlightedDays] = React.useState([]);
+  const userSessions = currentUser.sessions || [];
+  console.log("CHEK CHECK", userSessions);
+  // const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
-    fetchHighlightedDays(initialValue);
-    // abort request on unmount
-    return () => requestAbortController.current?.abort();
-  }, []);
+    if (currentUser.sessions.length > 0) {
+      let sessionDateAsArray;
+      const sessionDaysOfMonth = currentUser.sessions.map((sessionDate) => {
+        sessionDateAsArray = sessionDate.date.split("-");
+        if (sessionDateAsArray[1] == currentMonth) {
+          return sessionDateAsArray[2];
+        }
+      });
+      setHighlightedDays(sessionDaysOfMonth);
+    }
+  }, [currentMonth]);
 
   const handleMonthChange = (date) => {
-    if (requestAbortController.current) {
-      // make sure that you are aborting useless requests
-      // because it is possible to switch between months pretty quickly
-      requestAbortController.current.abort();
-    }
+    setCurrentMonth(
+      date["$M"].length == 1 ? `0${date["$M"] + 1}` : date["$M"] + 1
+    );
+  };
+  const renderSession = () => {
+    const filtered = userSessions.filter(
+      (session) => session.date === selectedDay
+    );
 
-    setIsLoading(true);
-    setHighlightedDays([]);
-    fetchHighlightedDays(date);
+    if (filtered.length > 0) {
+      return (
+        <>
+          {filtered.map((session) => (
+            <SessionCard key={session.id} session={session} />
+          ))}
+        </>
+      );
+    } else {
+      return (
+        <>
+          <CreateSession selectedDay={selectedDay} onCloseModal={handleClose} />
+        </>
+      );
+    }
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+        style={{
+          bgcolor: "lightgrey",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {renderSession()}
+      </Modal>
       <DateCalendar
         defaultValue={initialValue}
-        loading={isLoading}
-        onMonthChange={handleMonthChange}
+        // loading={isLoading}
+        onMonthChange={(month) => handleMonthChange(month)}
         renderLoading={() => <DayCalendarSkeleton />}
         slots={{
           day: ServerDay,
@@ -125,6 +165,9 @@ export default function CalendarWithButtons() {
         slotProps={{
           day: {
             highlightedDays,
+            currentMonth,
+            toggleModal,
+            setSelectedDay,
           },
         }}
       />

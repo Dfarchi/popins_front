@@ -3,10 +3,11 @@ import React, { useState, useContext, useEffect } from "react";
 import { Box, Button, TextField, Modal } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { UserContext } from "../context/userContext";
+import { useUser, useUserDispatch } from "../context/userContextFull";
 
 export const Signin = ({ toggleSignin }) => {
-  const { currentUser, setCurrentUser } = useContext(UserContext);
+  const currentUser = useUser();
+  const currentUserDispatch = useUserDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -14,12 +15,6 @@ export const Signin = ({ toggleSignin }) => {
   const navigateTo = (path) => {
     navigate(path);
   };
-  // useEffect(() => {
-  //   console.log("in signin useEffect", currentUser);
-  //   if (currentUser.id) {
-  //     Navigate(`/`);
-  //   }
-  // }, [currentUser.id]);
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
@@ -39,10 +34,10 @@ export const Signin = ({ toggleSignin }) => {
 
       if (response.status === 200) {
         const accessToken = response.data.access;
-        console.log(accessToken);
+        // console.log("accessToken", accessToken);
 
         const refreshToken = response.data.refresh;
-        console.log(refreshToken);
+        // console.log("refreshToken", refreshToken);
         localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("accessToken", accessToken);
 
@@ -56,7 +51,10 @@ export const Signin = ({ toggleSignin }) => {
         );
 
         if (userResponse.status === 200) {
-          setCurrentUser(userResponse.data);
+          currentUserDispatch({
+            type: "POPULATE",
+            payload: userResponse.data,
+          });
 
           const sessionResponse = await axios.get(
             "http://127.0.0.1:8000/api/session/",
@@ -71,7 +69,11 @@ export const Signin = ({ toggleSignin }) => {
           );
           if (sessionResponse.status === 200) {
             const sessions = sessionResponse.data;
-            setCurrentUser({ ...currentUser, sessions: sessions });
+            console.log("Sessions", sessions);
+            currentUserDispatch({
+              type: "GET_SESSIONS",
+              payload: sessions,
+            });
           }
         }
       }

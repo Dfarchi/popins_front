@@ -1,101 +1,219 @@
-import { Button, Container } from "@mui/material";
-import React, { useState, useContext } from "react";
-import TextField from "@mui/material/TextField";
-import { Box } from "@mui/material";
-import Avatar from "@mui/material/Avatar";
-import Link from "@mui/material/Link";
-import { useNavigate } from "react-router-dom";
-import { UserContext } from "../context/userContext";
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
+import {
+  Avatar,
+  Box,
+  Button,
+  Container,
+  Link,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useUser, useUserDispatch } from "../context/userContextFull";
+import axios from "axios";
 
-function calculateAge(yearOfBirth) {
-  const currentYear = new Date().getFullYear();
+function calculateAge(currentYear, yearOfBirth) {
   const age = currentYear - yearOfBirth;
+  console.log(
+    "currentYear",
+    currentYear,
+    "age",
+    age,
+    "yearOfBirth",
+    yearOfBirth
+  );
   return age;
 }
 
-const ProfilePage = () => {
-  const { currentUser, setCurrentUser } = useContext(UserContext);
-  console.log("in Profile_page", currentUser.id);
-  const navigate = useNavigate();
-
-  const navigateTo = (path) => {
-    navigate(path);
-  };
-  if (!currentUser.id) return navigateTo("/");
-
-  if (currentUser.id) {
-    return (
-      <div>
-        <Container maxWidth="sm">
-          <h1>Welcome {currentUser.name}!</h1>
-          <Box
-            component="form"
-            sx={{
-              "& .MuiTextField-root": { m: 1, width: "25ch" },
-            }}
-            noValidate
-            autoComplete="off"
-          >
-            <Avatar
-              src={currentUser.profile_pic}
-              sx={{ width: 56, height: 56 }}
-            />
-            <TextField
-              id="username"
-              helperText={`current is " ${currentUser.name} " `}
-              label="username"
-              variant="filled"
-            />
-            <TextField
-              id="email"
-              helperText={`current is " ${currentUser.email} " `}
-              label="email"
-              variant="filled"
-            />
-            <TextField
-              id="age"
-              helperText={`current is " ${calculateAge(
-                currentUser.birth_year
-              )} " `}
-              label="age"
-              variant="filled"
-            />
-            <TextField
-              id="Adress"
-              helperText={`current is " ${currentUser.address} " `}
-              label="Address"
-              variant="filled"
-            />
-            <TextField
-              id="bio"
-              helperText="Please enter your bio"
-              // {currentUser.bio}
-              label=" "
-              multiline
-              maxRows={4}
-              variant="filled"
-            />
-            <Link
-              href={currentUser.social}
-              component="button"
-              variant="body2"
-              onClick={() => {
-                console.info("I'm a button.");
-              }}
-            >
-              {currentUser.name}'s social link
-            </Link>
-          </Box>
-          <Button variant="contained">submit</Button>{" "}
-        </Container>
-      </div>
+const UpdateProfile = async (
+  fieldValue,
+  fieldName,
+  currentUserDispatch,
+  currentUser
+) => {
+  try {
+    const accessToken = localStorage.getItem("accessToken");
+    console.log("accesstoken:", accessToken);
+    const response = await axios.patch(
+      `http://127.0.0.1:8000/api/profile/${currentUser.id}/`,
+      {
+        [fieldName]: fieldValue,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
     );
-  } else {
-    return (
-      <Container>
-        <h1>This is going to be a 404 page</h1>
-      </Container>
-    );
+    if (response.status === 200) {
+      currentUserDispatch({
+        type: "POPULATE",
+        payload: response.data,
+      });
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
+
+const ProfilePage = () => {
+  const currentYear = new Date().getFullYear();
+  const currentUser = useUser();
+  const currentUserDispatch = useUserDispatch();
+  const [username, setUsername] = useState(currentUser.name);
+  const [email, setEmail] = useState(currentUser.email);
+  const [age, setAge] = useState(
+    calculateAge(currentYear, currentUser.birth_year)
+  );
+  const [address, setAddress] = useState(currentUser.address);
+  const [bio, setBio] = useState(currentUser.bio);
+  const [social, setSocial] = useState(currentUser.social);
+  console.log(currentUser);
+
+  if (!currentUser.id) return <Navigate to="/" />;
+
+  const handleFieldSubmit = (fieldValue, fieldName) => {
+    UpdateProfile(fieldValue, fieldName, currentUserDispatch, currentUser);
+  };
+
+  return (
+    <Container maxWidth="sm">
+      <Box sx={{ marginTop: 5 }}>
+        <Typography variant="h4" component="h1" align="center" gutterBottom>
+          Welcome {currentUser.name}!
+        </Typography>
+        <Box
+          sx={{ display: "flex", justifyContent: "center", marginBottom: 4 }}
+        >
+          <Avatar
+            src={currentUser.profile_pic}
+            sx={{ width: 56, height: 56 }}
+          />
+        </Box>
+
+        <Box id="username" sx={{ marginBottom: 2 }}>
+          <TextField
+            fullWidth
+            id="username"
+            label="Useraname"
+            variant="outlined"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            sx={{ marginLeft: 1 }}
+            onClick={() => handleFieldSubmit(username, "name")}
+          >
+            Change
+          </Button>
+        </Box>
+
+        <Box id="email" sx={{ marginBottom: 2 }}>
+          <TextField
+            fullWidth
+            id="email"
+            label="Email"
+            variant="outlined"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            sx={{ marginLeft: 1 }}
+            onClick={() => handleFieldSubmit(email, "email")}
+          >
+            Change
+          </Button>
+        </Box>
+
+        <Box id="age" sx={{ marginBottom: 2 }}>
+          <TextField
+            fullWidth
+            id="age"
+            label="Age"
+            variant="outlined"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            sx={{ marginLeft: 1 }}
+            onClick={() => handleFieldSubmit(currentYear - age, "birth_year")}
+          >
+            Change
+          </Button>
+        </Box>
+
+        <Box id="address" sx={{ marginBottom: 2 }}>
+          <TextField
+            fullWidth
+            id="address"
+            label="Address"
+            variant="outlined"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            sx={{ marginLeft: 1 }}
+            onClick={() => handleFieldSubmit(address, "address")}
+          >
+            Change
+          </Button>
+        </Box>
+
+        <Box id="bio" sx={{ marginBottom: 2 }}>
+          <TextField
+            fullWidth
+            id="bio"
+            label="Bio"
+            variant="outlined"
+            multiline
+            rows={4}
+            minRows={4}
+            maxRows={6}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            sx={{ marginLeft: 1 }}
+            onClick={() => handleFieldSubmit(bio, "bio")}
+          >
+            Change
+          </Button>
+        </Box>
+
+        <Box id="social" sx={{ marginBottom: 2 }}>
+          <TextField
+            fullWidth
+            id="social"
+            label={`${currentUser.name}'s social link`}
+            variant="outlined"
+            value={social}
+            onChange={(e) => setSocial(e.target.value)}
+            InputProps={{
+              sx: {
+                color: "blue",
+                textDecoration: "underline",
+                "&:hover": {
+                  cursor: "pointer",
+                },
+              },
+            }}
+          />
+          <Button
+            variant="outlined"
+            sx={{ marginLeft: 1 }}
+            onClick={() => handleFieldSubmit(social, "social")}
+          >
+            Change
+          </Button>
+        </Box>
+      </Box>
+    </Container>
+  );
+};
+
 export default ProfilePage;
