@@ -26,10 +26,8 @@ const SessionPage = () => {
     if (currentUser.sessions) {
       let sortedSessions = [...userSessions];
       if (sortOption === "date") {
-        // Sort by date
         sortedSessions.sort((a, b) => new Date(a.date) - new Date(b.date));
       } else if (sortOption === "hasHappened") {
-        // Sort by "has happened" status
         sortedSessions.sort((a, b) => a.has_happened - b.has_happened);
       }
 

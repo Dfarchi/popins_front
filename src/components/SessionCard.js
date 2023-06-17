@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   Switch,
   IconButton,
 } from "@mui/material";
-import { useUserDispatch } from "../context/userContextFull";
+import { useUserDispatch, useUser } from "../context/userContextFull";
 import { Delete } from "@mui/icons-material";
 import axios from "axios";
 
@@ -14,11 +14,11 @@ const SessionCard = ({ session }) => {
   const { id, date, salary, note, has_happened, user, interested_nannies } =
     session;
   const userDispatch = useUserDispatch();
-
-  const cardColor = has_happened ? "#A0A0A0" : "#FFFFFF";
+  const currentUser = useUser();
 
   const [isHappened, setIsHappened] = useState(has_happened);
   const accessToken = localStorage.getItem("accessToken");
+  const cardColor = has_happened ? "#A0A0A0" : "#FFFFFF";
 
   const handleSwitchChange = async () => {
     setIsHappened(!isHappened);
@@ -33,11 +33,19 @@ const SessionCard = ({ session }) => {
         }
       );
       if (response.status === 200) {
-        // Update the session in the user context
         userDispatch({
           type: "UPDATE_SESSION",
           payload: { sessionId: id, hasHappened: isHappened },
         });
+        console.log(
+          "date = ",
+          session.date,
+          "has_happened",
+          session.has_happened,
+          "currentUser",
+          currentUser.sessions[4]["date"],
+          currentUser.sessions[4]["has_happened"]
+        );
       }
     } catch (error) {
       console.log(error);
@@ -55,13 +63,28 @@ const SessionCard = ({ session }) => {
         }
       );
       if (response.status === 204) {
-        // Remove the session from the user context
         userDispatch({ type: "DELETE_SESSION", payload: id });
+        console.log(
+          "date = ",
+          session.date,
+          "has_happened",
+          session.has_happened,
+          "currentUser",
+          currentUser.sessions[2]["has_happened"]
+        );
       }
     } catch (error) {
       console.log(error);
     }
   };
+
+  useEffect(
+    (cardColor) => {
+      cardColor = isHappened ? "#A0A0A0" : "#FFFFFF";
+      // Update the cardColor variable based on the isHappened state
+    },
+    [isHappened]
+  );
 
   return (
     <Card

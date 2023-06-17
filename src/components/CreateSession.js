@@ -55,7 +55,7 @@ const SessionForm = ({ selectedDay, onCloseModal }) => {
 
       if (response.status === 200) {
         const session = response.data;
-        console.log("Session", session);
+        // console.log("Session", session);
         currentUserDispatch({
           type: "CREATE_SESSION",
           payload: session,

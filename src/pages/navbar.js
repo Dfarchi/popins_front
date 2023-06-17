@@ -101,7 +101,8 @@ export default function MiniDrawer() {
   const [isSigninOpen, setisSigninOpen] = useState(false);
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-
+  const currentUser = useUser();
+  const userDispatch = useUserDispatch();
   const navigate = useNavigate();
 
   const navigateTo = (path) => {
@@ -110,7 +111,6 @@ export default function MiniDrawer() {
 
   const toggleSignin = () => {
     setisSigninOpen(!isSigninOpen);
-    console.log("signin is", isSigninOpen);
   };
 
   const handleDrawerOpen = () => {
@@ -119,6 +119,14 @@ export default function MiniDrawer() {
 
   const handleDrawerClose = () => {
     setOpen(false);
+  };
+
+  const handleClick = (route) => {
+    if (!currentUser.id) {
+      alert("Please log in first");
+    } else {
+      navigateTo(route);
+    }
   };
 
   return (
@@ -183,7 +191,7 @@ export default function MiniDrawer() {
           <Divider />
           <Box sx={{ width: 250 }} role="presentation">
             <List>
-              <ListItemButton onClick={() => navigateTo("/")} id="Home">
+              <ListItemButton onClick={() => handleClick("/")} id="Home">
                 <ListItemIcon>
                   <CribIcon />
                 </ListItemIcon>
@@ -191,7 +199,7 @@ export default function MiniDrawer() {
               </ListItemButton>
 
               <ListItemButton
-                onClick={() => navigateTo("/session")}
+                onClick={() => handleClick("/session")}
                 id="Sessions"
               >
                 <ListItemIcon>
@@ -201,7 +209,7 @@ export default function MiniDrawer() {
               </ListItemButton>
 
               <ListItemButton
-                onClick={() => navigateTo("/profile/")}
+                onClick={() => handleClick("/profile/")}
                 id="Account"
               >
                 <ListItemIcon>

@@ -15,7 +15,6 @@ import { useContext } from "react";
 import { useUser, useUserDispatch } from "../context/userContextFull";
 
 export default function Signup({ handleSignupClose }) {
-  console.log("hey im here");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmedpassword, setconfirmedPassword] = useState("");

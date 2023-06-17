@@ -8,7 +8,6 @@ import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { DayCalendarSkeleton } from "@mui/x-date-pickers/DayCalendarSkeleton";
 import { useUser } from "../context/userContextFull";
 import CreateSession from "./CreateSession";
-import { Create } from "@mui/icons-material";
 import Modal from "@mui/material/Modal";
 import SessionCard from "./SessionCard";
 
@@ -23,6 +22,7 @@ const ServerDay = (props) => {
     currentMonth,
     toggleModal,
     setSelectedDay,
+    selectedDay,
     ...other
   } = props;
 
@@ -33,8 +33,7 @@ const ServerDay = (props) => {
     String(day["$D"]).length === 1 ? `0${day["$D"]}` : day["$D"];
 
   const isSelected =
-    !props.outsideCurrentMonth &&
-    highlightedDays.includes(String(newDayFormat));
+    !outsideCurrentMonth && highlightedDays.includes(newDayFormat);
 
   const filteredSessions = userSessions.filter((session) => {
     const { date } = session;
@@ -42,20 +41,43 @@ const ServerDay = (props) => {
     const sessionMonth = parseInt(parts[1]);
     const sessionDay = parseInt(parts[2]);
 
+    console.log(
+      " !outsideCurrentMonth =",
+      !outsideCurrentMonth,
+      "sessionDay =",
+      sessionDay,
+      " parseInt(newDayFormat) =",
+      parseInt(newDayFormat),
+      "sessionDay === parseInt(newDayFormat)=",
+      sessionDay === parseInt(newDayFormat),
+      "highlightedDays.includes(String(newDayFormat)=",
+      highlightedDays.includes(newDayFormat)
+    );
+
     return (
       sessionMonth === currentMonth && sessionDay === parseInt(newDayFormat)
     );
   });
+  console.log("isSelected", isSelected, highlightedDays, filteredSessions);
 
   const hasHappened = filteredSessions.some((session) => session.has_happened);
 
-  let badgeContent = "";
+  let badgeContent = null;
 
   if (isSelected) {
+    console.log("isSelected, hasHappened", isSelected, hasHappened);
     if (hasHappened) {
-      badgeContent = "✅";
+      badgeContent = (
+        <span role="img" aria-label="Completed">
+          ✅
+        </span>
+      );
     } else {
-      badgeContent = "🌚";
+      badgeContent = (
+        <span role="img" aria-label="Pending">
+          🌚
+        </span>
+      );
     }
   }
 
@@ -64,7 +86,7 @@ const ServerDay = (props) => {
     const month = (day["$M"] + 1).toString().padStart(2, "0");
     const dayOfMonth = day["$D"].toString().padStart(2, "0");
     const today = `${day["$y"]}-${month}-${dayOfMonth}`;
-    console.log(today);
+    console.log("day", today);
     setSelectedDay(today);
   };
 
@@ -95,27 +117,27 @@ export default function MyCalendar() {
   );
   const [highlightedDays, setHighlightedDays] = React.useState([]);
   const userSessions = currentUser.sessions || [];
-  console.log("CHEK CHECK", userSessions);
-  // const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
-    if (currentUser.sessions.length > 0) {
-      let sessionDateAsArray;
-      const sessionDaysOfMonth = currentUser.sessions.map((sessionDate) => {
-        sessionDateAsArray = sessionDate.date.split("-");
-        if (sessionDateAsArray[1] == currentMonth) {
-          return sessionDateAsArray[2];
-        }
-      });
+    if (userSessions.length > 0) {
+      const sessionDaysOfMonth = userSessions
+        .filter((session) => {
+          const [year, month] = session.date.split("-");
+          return Number(month) === currentMonth;
+        })
+        .map((session) => Number(session.date.split("-")[2]));
       setHighlightedDays(sessionDaysOfMonth);
+    } else {
+      setHighlightedDays([]);
     }
-  }, [currentMonth]);
+  }, [currentMonth, userSessions]);
 
   const handleMonthChange = (date) => {
     setCurrentMonth(
-      date["$M"].length == 1 ? `0${date["$M"] + 1}` : date["$M"] + 1
+      date["$M"].length === 1 ? `0${date["$M"] + 1}` : date["$M"] + 1
     );
   };
+
   const renderSession = () => {
     const filtered = userSessions.filter(
       (session) => session.date === selectedDay
@@ -156,19 +178,20 @@ export default function MyCalendar() {
       </Modal>
       <DateCalendar
         defaultValue={initialValue}
-        // loading={isLoading}
-        onMonthChange={(month) => handleMonthChange(month)}
+        onMonthChange={handleMonthChange}
         renderLoading={() => <DayCalendarSkeleton />}
         slots={{
-          day: ServerDay,
-        }}
-        slotProps={{
-          day: {
-            highlightedDays,
-            currentMonth,
-            toggleModal,
-            setSelectedDay,
-          },
+          day: (props) => (
+            <ServerDay
+              {...props}
+              highlightedDays={highlightedDays}
+              currentMonth={currentMonth}
+              toggleModal={toggleModal}
+              setSelectedDay={setSelectedDay}
+              selectedDay={selectedDay}
+              sessions={userSessions}
+            />
+          ),
         }}
       />
     </LocalizationProvider>

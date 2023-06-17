@@ -11,17 +11,10 @@ import {
 } from "@mui/material";
 import { useUser, useUserDispatch } from "../context/userContextFull";
 import axios from "axios";
+import Alert from "@mui/material/Alert";
 
 function calculateAge(currentYear, yearOfBirth) {
   const age = currentYear - yearOfBirth;
-  console.log(
-    "currentYear",
-    currentYear,
-    "age",
-    age,
-    "yearOfBirth",
-    yearOfBirth
-  );
   return age;
 }
 
@@ -29,7 +22,8 @@ const UpdateProfile = async (
   fieldValue,
   fieldName,
   currentUserDispatch,
-  currentUser
+  currentUser,
+  setAlert
 ) => {
   try {
     const accessToken = localStorage.getItem("accessToken");
@@ -50,9 +44,17 @@ const UpdateProfile = async (
         type: "POPULATE",
         payload: response.data,
       });
+      setAlert({
+        type: "success",
+        message: `Profile updated successfully!`,
+      });
     }
   } catch (error) {
     console.log(error);
+    setAlert({
+      type: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -68,17 +70,30 @@ const ProfilePage = () => {
   const [address, setAddress] = useState(currentUser.address);
   const [bio, setBio] = useState(currentUser.bio);
   const [social, setSocial] = useState(currentUser.social);
-  console.log(currentUser);
+  const [alert, setAlert] = useState(null); // New state for alert
+
+  // console.log(currentUser);
 
   if (!currentUser.id) return <Navigate to="/" />;
 
   const handleFieldSubmit = (fieldValue, fieldName) => {
-    UpdateProfile(fieldValue, fieldName, currentUserDispatch, currentUser);
+    UpdateProfile(
+      fieldValue,
+      fieldName,
+      currentUserDispatch,
+      currentUser,
+      setAlert
+    );
   };
 
   return (
     <Container maxWidth="sm">
       <Box sx={{ marginTop: 5 }}>
+        {alert && (
+          <Alert severity={alert.type} onClose={() => setAlert(null)}>
+            {alert.message}
+          </Alert>
+        )}
         <Typography variant="h4" component="h1" align="center" gutterBottom>
           Welcome {currentUser.name}!
         </Typography>
@@ -95,7 +110,7 @@ const ProfilePage = () => {
           <TextField
             fullWidth
             id="username"
-            label="Useraname"
+            label="Username"
             variant="outlined"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
